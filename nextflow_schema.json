@@ -277,6 +277,11 @@
         "prodigal_mode": {
             "type": "string",
             "default": "meta"
+        },
+
+        "skip_stats": {
+            "type": "boolean",
+            "description": "Skip collect_stats"
         }
     }
 }

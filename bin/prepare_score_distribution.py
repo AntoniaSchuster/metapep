@@ -80,8 +80,10 @@ def main(args=None):
                 .drop(columns="entity_id") \
                 .merge(conditions) \
                 .merge(condition_allele_map) \
-                .drop(columns=["allele_id", "microbiome_id", "condition_id"]) \
-                .groupby(["peptide_id", "prediction_score", "condition_name"])["entity_weight"] \
+                .drop(columns=["allele_id", "microbiome_id", "condition_id"])
+        with open(os.path.join(args.outdir, "db_tables_merged.allele_" + str(allele_id) + ".tsv"), 'w') as outfile:
+            data.to_csv(outfile, sep="\t", index=False, header=True)
+        data = data.groupby(["peptide_id", "prediction_score", "condition_name"])["entity_weight"] \
                 .sum() \
                 .reset_index(name="weight_sum") \
                 .drop(columns="peptide_id")

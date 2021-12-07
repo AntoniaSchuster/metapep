@@ -89,11 +89,13 @@ def main(args=None):
                 .drop(columns="protein_id") \
                 .merge(microbiomes_entities_occs) \
                 .merge(conditions) \
-                .drop(columns="microbiome_id") \
                 .merge(condition_allele_map) \
-                .drop(columns=["allele_id", "condition_id"])
+                .drop(columns=["allele_id", "microbiome_id", "condition_id"])
+        with open(os.path.join(args.outdir, "db_tables_merged.allele_" + str(allele_id) + ".tsv"), 'w') as outfile:
+            data.to_csv(outfile, sep="\t", index=False, header=True)
 
         n = len(data)
+        print("n = ", n, flush=True)
         data["binder"] = data["prediction_score"].apply(call_binder, method=args.method)
 
         data = data \

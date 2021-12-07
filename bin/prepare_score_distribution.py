@@ -80,7 +80,7 @@ def main(args=None):
                 .drop(columns="entity_id") \
                 .merge(conditions) \
                 .merge(condition_allele_map) \
-                .drop(columns=["allele_id", "microbiome_id", "condition_id"])
+                .drop(columns=["allele_id", "microbiome_id", "condition_id"]) \
                 .groupby(["peptide_id", "prediction_score", "condition_name"])["entity_weight"] \
                 .sum() \
                 .reset_index(name="weight_sum") \

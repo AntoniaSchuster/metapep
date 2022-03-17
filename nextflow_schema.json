@@ -234,7 +234,7 @@
                 },
                 "sample_n": {
                     "type": "integer",
-                    "default": false,
+                    "default": 0,
                     "description": "Number of peptides to subsample for epitope prediction."
                 },
                 "pred_method": {

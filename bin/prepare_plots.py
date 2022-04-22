@@ -24,6 +24,8 @@ import csv
 import re
 from collections import defaultdict
 
+csv.field_size_limit(100000000) # hacky solution to allow for large csv fields
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('-i',   "--input", required=True, nargs='+', metavar='FILE', help="List of epitope prediction files")

@@ -26,7 +26,7 @@ from collections import defaultdict
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i',   "--input", required=True, metavar='FILE', help="List of epitope prediction files")
+    parser.add_argument('-i',   "--input", required=True, nargs='+', metavar='FILE', help="List of epitope prediction files")
     parser.add_argument('-a',   "--allele", required=True, metavar='STR', help="Allele name")
     return parser.parse_args(args)
 
@@ -39,10 +39,7 @@ def call_binder(score, method):
 def get_binding_ratio(no_binder, n, condition, entity):
     return str(no_binder[condition][entity]/n[condition])
 
-def prepare_plots(reader, pred_scores_file, entity_ratios_file):
-    n = defaultdict(int)
-    no_binder = defaultdict(lambda: defaultdict(int))
-    weight = defaultdict(lambda: defaultdict(float))
+def prepare_plots(reader, pred_scores_file, entity_ratios_file, n, no_binder, weight):
     for line in reader:
         binder = bool(line["binder"])
         score = float(line["score"])
@@ -58,24 +55,29 @@ def prepare_plots(reader, pred_scores_file, entity_ratios_file):
                     weight[condition][entity] = float(entity_weight)
         for entry in score_dist:
             print("\t".join(entry), file=pred_scores_file)
-    for condition in n.keys():
-        for entity in no_binder[condition].keys():
-            entry = [condition, get_binding_ratio(no_binder, n, condition, entity), str(weight[condition][entity])]
-            print("\t".join(entry), file=entity_ratios_file)
 
 
 def main(args=None):
     args = parse_args(args)
-    with open(args.input, "r", newline='') as file, open(f"prediction_scores.{args.allele}.tsv", "w") as pred_scores_file, open(f"entity_binding_ratios.{args.allele}.tsv", "w") as entity_ratios_file:
-        header = file.readline().strip().split("\t")
-        header = [re.sub(r'.*affinity', 'score', h) for h in header]
-        header = [re.sub(r'.*binder', 'binder', h) for h in header]
-        reader = csv.DictReader(file, delimiter='\t', fieldnames=header)
+    with open(f"prediction_scores.{args.allele}.tsv", "w") as pred_scores_file, open(f"entity_binding_ratios.{args.allele}.tsv", "w") as entity_ratios_file:
         header_entity_ratios = ["condition_name", "binding_rate","entity_weight"]
         entity_ratios_file.write("\t".join(header_entity_ratios) + "\n")
         header_pred_score = ["prediction_score", "condition_name", "weight_sum"]
         pred_scores_file.write("\t".join(header_pred_score) + "\n")
-        prepare_plots(reader, pred_scores_file, entity_ratios_file)
+        n = defaultdict(int)
+        no_binder = defaultdict(lambda: defaultdict(int))
+        weight = defaultdict(lambda: defaultdict(float))
+        for file_name in args.input:
+            with open(file_name, "r", newline='') as file:
+                header = file.readline().strip().split("\t")
+                header = [re.sub(r'.*affinity', 'score', h) for h in header]
+                header = [re.sub(r'.*binder', 'binder', h) for h in header]
+                reader = csv.DictReader(file, delimiter='\t', fieldnames=header)
+                prepare_plots(reader, pred_scores_file, entity_ratios_file, n, no_binder, weight)
+        for condition in n.keys():
+            for entity in no_binder[condition].keys():
+                entry = [condition, get_binding_ratio(no_binder, n, condition, entity), str(weight[condition][entity])]
+                print("\t".join(entry), file=entity_ratios_file)
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -167,62 +167,62 @@ workflow METAPEP {
         .map { meta, predicted ->
             meta.files = predicted.size()
             return [meta, predicted]}
-        .branch {
-            meta_data, predicted ->
-                multi: meta_data.files > 1
-                    return [ meta_data, predicted ]
-                single: meta_data.files == 1
-                    return [ meta_data, predicted ]
-        }
+        // .branch {
+        //     meta_data, predicted ->
+        //         multi: meta_data.files > 1
+        //             return [ meta_data, predicted ]
+        //         single: meta_data.files == 1
+        //             return [ meta_data, predicted ]
+        // }
         .set { ch_predicted_peptides }
 
-    // Combine epitope prediction results
-    CAT_TSV(
-        ch_predicted_peptides.single
-    )
-    CSVTK_CONCAT(
-        ch_predicted_peptides.multi
-    )
-    ch_versions = ch_versions.mix( CSVTK_CONCAT.out.versions)
+    // // Combine epitope prediction results
+    // CAT_TSV(
+    //     ch_predicted_peptides.single
+    // )
+    // CSVTK_CONCAT(
+    //     ch_predicted_peptides.multi
+    // )
+    // ch_versions = ch_versions.mix( CSVTK_CONCAT.out.versions)
 
-    ch_predictions = CAT_TSV.out.output.mix( CSVTK_CONCAT.out.predicted )
+    // ch_predictions = CAT_TSV.out.output.mix( CSVTK_CONCAT.out.predicted )
 
-    //  Combine protein sequences
-    CAT_FASTA(
-        PEPTIDE_PREDICTION
-            .out
-            .fasta
-            .groupTuple()
-    )
+    // //  Combine protein sequences
+    // CAT_FASTA(
+    //     PEPTIDE_PREDICTION
+    //         .out
+    //         .fasta
+    //         .groupTuple()
+    // )
 
-    PEPTIDE_PREDICTION
-        .out
-        .json
-        .groupTuple()
-        .map { meta, json ->
-            meta.files = json.size()
-            return [meta, json]}
-        .branch {
-            meta, json ->
-                multi: meta.files > 1
-                    return [ meta, json ]
-                single: meta.files == 1
-                    return [ meta, json ]
-        }
-        .set { ch_json_reports }
+    // PEPTIDE_PREDICTION
+    //     .out
+    //     .json
+    //     .groupTuple()
+    //     .map { meta, json ->
+    //         meta.files = json.size()
+    //         return [meta, json]}
+    //     .branch {
+    //         meta, json ->
+    //             multi: meta.files > 1
+    //                 return [ meta, json ]
+    //             single: meta.files == 1
+    //                 return [ meta, json ]
+    //     }
+    //     .set { ch_json_reports }
 
-    // Combine epitope prediction reports
-    MERGE_JSON_SINGLE(
-        ch_json_reports.single
-    )
-    MERGE_JSON_MULTI(
-        ch_json_reports.multi
-    )
-    ch_versions = ch_versions.mix( MERGE_JSON_SINGLE.out.versions.ifEmpty(null) )
-    ch_versions = ch_versions.mix( MERGE_JSON_MULTI.out.versions.ifEmpty(null) )
+    // // Combine epitope prediction reports
+    // MERGE_JSON_SINGLE(
+    //     ch_json_reports.single
+    // )
+    // MERGE_JSON_MULTI(
+    //     ch_json_reports.multi
+    // )
+    // ch_versions = ch_versions.mix( MERGE_JSON_SINGLE.out.versions.ifEmpty(null) )
+    // ch_versions = ch_versions.mix( MERGE_JSON_MULTI.out.versions.ifEmpty(null) )
 
     PREPARE_PLOTS(
-        ch_predictions
+        ch_predicted_peptides
     )
     ch_versions = ch_versions.mix(PREPARE_PLOTS.out.versions)
 
@@ -236,58 +236,6 @@ workflow METAPEP {
     )
     ch_versions = ch_versions.mix(PLOT_ENTITY_BINDING_RATIOS.out.versions)
 
-
-    // /*
-    // * Collect some numbers: proteins, peptides, unique peptides per conditon
-    // */
-    // if (!params.skip_stats){
-    //     COLLECT_STATS (
-    //         GENERATE_PEPTIDES.out.ch_peptides,
-    //         GENERATE_PEPTIDES.out.ch_proteins_peptides,
-    //         GENERATE_PROTEIN_AND_ENTITY_IDS.out.ch_entities_proteins,
-    //         GENERATE_PROTEIN_AND_ENTITY_IDS.out.ch_microbiomes_entities_noweights,
-    //         INPUT_CHECK.out.ch_conditions
-    //     )
-    //     ch_versions = ch_versions.mix(COLLECT_STATS.out.versions)
-    // }
-
-    // /*
-    // * Generate figures
-    // */
-    // PREPARE_SCORE_DISTRIBUTION (
-    //     MERGE_PREDICTIONS.out.ch_predictions,
-    //     GENERATE_PEPTIDES.out.ch_proteins_peptides,
-    //     GENERATE_PROTEIN_AND_ENTITY_IDS.out.ch_entities_proteins,
-    //     FINALIZE_MICROBIOME_ENTITIES.out.ch_microbiomes_entities,
-    //     INPUT_CHECK.out.ch_conditions,
-    //     INPUT_CHECK.out.ch_conditions_alleles,
-    //     INPUT_CHECK.out.ch_alleles
-    // )
-    // ch_versions = ch_versions.mix(PREPARE_SCORE_DISTRIBUTION.out.versions)
-
-    // PLOT_SCORE_DISTRIBUTION (
-    //     PREPARE_SCORE_DISTRIBUTION.out.ch_prep_prediction_scores.flatten(),
-    //     INPUT_CHECK.out.ch_alleles,
-    //     INPUT_CHECK.out.ch_conditions
-    // )
-    // ch_versions = ch_versions.mix(PLOT_SCORE_DISTRIBUTION.out.versions)
-
-    // PREPARE_ENTITY_BINDING_RATIOS (
-    //     MERGE_PREDICTIONS.out.ch_predictions,
-    //     GENERATE_PEPTIDES.out.ch_proteins_peptides,
-    //     GENERATE_PROTEIN_AND_ENTITY_IDS.out.ch_entities_proteins,
-    //     FINALIZE_MICROBIOME_ENTITIES.out.ch_microbiomes_entities,
-    //     INPUT_CHECK.out.ch_conditions,
-    //     INPUT_CHECK.out.ch_conditions_alleles,
-    //     INPUT_CHECK.out.ch_alleles
-    // )
-    // ch_versions = ch_versions.mix(PREPARE_ENTITY_BINDING_RATIOS.out.versions)
-
-    // PLOT_ENTITY_BINDING_RATIOS (
-    //     PREPARE_ENTITY_BINDING_RATIOS.out.ch_prep_entity_binding_ratios.flatten(),
-    //     INPUT_CHECK.out.ch_alleles
-    // )
-    // ch_versions = ch_versions.mix(PLOT_ENTITY_BINDING_RATIOS.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')

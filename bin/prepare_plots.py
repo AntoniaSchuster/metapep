@@ -45,18 +45,19 @@ def prepare_plots(reader, pred_scores_file, entity_ratios_file, n, no_binder, we
     for line in reader:
         binder = bool(line["binder"])
         score = float(line["score"])
-        score_dist = []
+        score_dist = defaultdict(lambda: defaultdict(float))
         for condition, counts, entities, entity_weights in zip(line["conditions"].split(";"), line["counts"].split(";"), line["entities"].split(";"), line["weights"].split(";")):
             # prepare score distribution
-            score_dist.append([str(score), condition, str(sum([float(entity_weight) for entity_weight in entity_weights.split(",")]))])
+            score_dist[condition][str(score)] += sum([float(entity_weight) for entity_weight in entity_weights.split(",")])
             # prepare entity binding ratio
             n[condition] += sum([int(c) for c in counts.split(",")])
             if binder:
                 for entity, entity_weight in zip(entities.split(","), entity_weights.split(",")):
                     no_binder[condition][entity] += sum([int(c) for c in counts.split(",")])
                     weight[condition][entity] = float(entity_weight)
-        for entry in score_dist:
-            print("\t".join(entry), file=pred_scores_file)
+        for condition in score_dist.keys():
+            for score in score_dist[condition].keys():
+                print("\t".join([score, condition, str(score_dist[condition][score])]), file=pred_scores_file)
 
 
 def main(args=None):

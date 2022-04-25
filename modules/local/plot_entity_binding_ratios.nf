@@ -13,7 +13,7 @@ process PLOT_ENTITY_BINDING_RATIOS {
     tuple val(meta), path(prep_entity_binding_ratios)
 
     output:
-    path "entity_binding_ratios.*.pdf",     emit:   ch_plot_entity_binding_ratios
+    path "entity_binding_ratios.*.png",     emit:   ch_plot_entity_binding_ratios
     path "versions.yml",                    emit:   versions
 
     script:

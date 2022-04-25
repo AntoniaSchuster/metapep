@@ -54,6 +54,6 @@ p2 <- ggplot(data, aes(x=condition_name, y=binding_rate, fill=condition_name)) +
     theme_classic() +
     theme(legend.position="none", plot.title = element_text(hjust = 0.5))
 
-ggsave(paste0("entity_binding_ratios.", allele_str, ".pdf"), height=5, width=5)
+ggsave(paste0("entity_binding_ratios.", allele_str, ".png"), height=5, width=5)
 
 # TODO use weights for violin plot
